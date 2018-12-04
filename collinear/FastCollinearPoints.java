@@ -2,6 +2,7 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.StdDraw;
 import edu.princeton.cs.algs4.StdOut;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,8 +25,14 @@ import java.util.List;
  */
 public class FastCollinearPoints {
 
+    /**
+     * Stores the points
+     */
     private final Point[] points;
-    private final List<LineSegment> lineSegments;
+    /**
+     * Stores the line segments
+     */
+    private final List<LineSegment> lineSegments = new ArrayList<>();
 
     /**
      * Finds all line segments containing 4 or more points Corner cases. Throw a
@@ -35,8 +42,10 @@ public class FastCollinearPoints {
      * @param points
      */
     public FastCollinearPoints(Point[] points) {
-        this.points = clonePoints(points);
-        this.lineSegments = createLineSegments();
+        this.points = clonePointsWithNullAndDuplicateCheck(points);
+        if (points.length > 3) {
+            createLineSegments();
+        }
     }
 
 
@@ -51,73 +60,23 @@ public class FastCollinearPoints {
      *
      * @return
      */
-    private List<LineSegment> createLineSegments() {
+    private void createLineSegments() {
 
-        List<Point[]> listOfLineSegments = new ArrayList<>();
+        // use otherPoints as the working array
+        Point[] otherPoints = clonePointsWithoutCheck(points);
 
-        for (int p = 0; p < points.length; p++) {
+        // iterate over the points to use the current one as the basePoint
+        for (int basePointIndex = 0; basePointIndex < points.length - 1; basePointIndex++) {
 
-            Point[] otherPoints = getOtherPoints(p);
+            Point basePoint = points[basePointIndex];
 
-            if (otherPoints.length > 0) {
+            // sort the otherPoints by the slope order of the basePoint
+            Arrays.sort(otherPoints, basePoint.slopeOrder());
 
-                Arrays.sort(otherPoints, points[p].slopeOrder());
+            // select the appropriate points from the sorted array to be the line segments
+            addSameSlopeLineSegments(basePoint, otherPoints);
 
-                addSameSlopeLineSegments(listOfLineSegments, points[p], otherPoints);
-            }
         }
-
-        return getLineSegmentsFromStartAndEndPoints(listOfLineSegments);
-    }
-
-
-    private boolean equalPoints(Point p0, Point p1) {
-
-        if (p0 == null && p1 == null) {
-            return true;
-        }
-        else if (p0 == null && p1 != null || p0 != null && p1 == null) {
-            return false;
-        }
-        else if (p0 != null && p1 != null) {
-            return p0.compareTo(p1) == 0;
-        }
-        return false;
-    }
-
-
-    private boolean sameArray(Point[] arr1, Point[] arr2) {
-
-        if (arr1.length == arr2.length) {
-            for (int j = 0; j < arr1.length; j++) {
-                if (!equalPoints(arr1[j], arr2[j])) {
-                    // System.out.println("Different");
-                    return false;
-                }
-            }
-        }
-        else {
-            //    System.out.println("Different");
-            return false;
-        }
-        // System.out.println("Same");
-        return true;
-    }
-
-    private void addLineSegment(List<Point[]> listOfLineSegments, Point[] pointsOfLineSegment) {
-
-        Arrays.sort(pointsOfLineSegment);
-
-        boolean found = false;
-        for (Point[] current : listOfLineSegments) {
-            if (sameArray(current, pointsOfLineSegment)) {
-                found = true;
-            }
-        }
-        if (!found) {
-            listOfLineSegments.add(pointsOfLineSegment);
-        }
-
     }
 
     /**
@@ -127,92 +86,100 @@ public class FastCollinearPoints {
      * <p>Check if any 3 (or more) adjacent points in the sorted order have equal slopes with
      * respect to p. If so, these points, together with p, are collinear.
      *
-     * @param point       the base point
+     * @param basePoint   the base point
      * @param otherPoints {@link List} of {@link Point}s sorted by slope in reference to
      *                    <code>point</code>
      * @return the {@link List} of {@link LineSegment}s which has the same slope in reference to
      * <code>point</code>.
      */
-    private void addSameSlopeLineSegments(List<Point[]> listOfLineSegment, Point point,
+    private void addSameSlopeLineSegments(Point basePoint,
                                           Point[] otherPoints) {
 
+        // current slope value
         double slope;
+        // previous slope value
         double prevSlope;
+        // current index
         int i = 1;
-        slope = point.slopeTo(otherPoints[0]);
+        // initialize current slope
+        slope = basePoint.slopeTo(otherPoints[0]);
 
+        // loop until index is valid
         while (i < otherPoints.length) {
 
-            // find the start of a series
+            // find the start of a series of same slope values
             do {
                 prevSlope = slope;
-                slope = point.slopeTo(otherPoints[i]);
+                slope = basePoint.slopeTo(otherPoints[i]);
                 i++;
             }
-            while (i < otherPoints.length && prevSlope != slope);
+            while (i < otherPoints.length && Double.compare(prevSlope, slope) != 0);
 
 
-            if (prevSlope == slope) {
+            // check if the end of the series is reached
+            if (Double.compare(prevSlope, slope) == 0) {
 
                 int startIndex = i - 2;
 
                 int endIndex = i - 1;
 
+                // find the end of the interval
                 if (i < otherPoints.length) {
 
                     double intervalSlope = slope;
 
                     // find the end of the interval
-                    while (i < otherPoints.length && intervalSlope == point
+                    while (i < otherPoints.length && intervalSlope == basePoint
                             .slopeTo(otherPoints[i])) {
                         i++;
                     }
 
-
                     endIndex = i - 1;
                 }
 
+                // check if there are at least 3 elements in the found series
                 if (endIndex >= startIndex + 2) {
 
-                    Point[] pointsOfLineSegment = new Point[1 + endIndex - startIndex + 1];
-                    pointsOfLineSegment[0] = point;
+                    // sort the array by natural ordering
+                    Arrays.sort(otherPoints, startIndex, endIndex + 1);
 
-                    for (int j = 1; j <= endIndex - startIndex + 1; j++) {
-                        pointsOfLineSegment[j] = otherPoints[startIndex - 1 + j];
+                    // only add the line segment, if it starts with the basePoint. This way
+                    // the duplicates can be avoided.
+                    int compareResult = basePoint.compareTo(otherPoints[startIndex]);
+                    if (compareResult <= 0) {
+                        LineSegment lineSegment = new LineSegment(basePoint, otherPoints[endIndex]);
+                        lineSegments.add(lineSegment);
                     }
-
-                    addLineSegment(listOfLineSegment, pointsOfLineSegment);
                 }
             }
         }
-
-
     }
 
-    private List<LineSegment> getLineSegmentsFromStartAndEndPoints(
-            List<Point[]> listofLineSegemnts) {
-        List<LineSegment> result = new ArrayList<>();
-
-        for (Point[] segment : listofLineSegemnts) {
-            result.add(new LineSegment(segment[0], segment[segment.length - 1]));
-        }
-
-        return result;
-    }
-
-    private Point[] getOtherPoints(int p) {
-        Point[] other = new Point[points.length - 1];
-        int j = 0;
+    /**
+     * Creates a shallow copy of the array <code>points</code>
+     *
+     * @param points the array to clone
+     * @return the duplicate of the array
+     */
+    private static Point[] clonePointsWithoutCheck(Point[] points) {
+        Point[] clone = new Point[points.length];
         for (int i = 0; i < points.length; i++) {
-            if (i != p) {
-                other[j] = points[i];
-                j++;
-            }
+            clone[i] = points[i];
         }
-        return other;
+        return clone;
     }
 
-    private static Point[] clonePoints(Point[] points) {
+    /**
+     * Creates a shallow copy from the array <code>points</code>, check for null argument value,
+     * null and duplicate array elements and throws {@link IllegalArgumentException} when encounters
+     * them
+     *
+     * @param points the array of {@link Point}
+     * @return the copied array
+     * @throws IllegalArgumentException when the <code>points</code> array is null, array elements
+     *                                  null or duplicated.
+     */
+    private static Point[] clonePointsWithNullAndDuplicateCheck(Point[] points) {
         if (points == null) {
             throw new IllegalArgumentException("points should not be null");
         }
@@ -231,9 +198,14 @@ public class FastCollinearPoints {
         return clone;
     }
 
-    private static void checkDuplicates(Point[] clone) {
-        for (int i = 1; i < clone.length; i++) {
-            if (clone[i - 1].compareTo(clone[i]) == 0) {
+    /**
+     * Returns true, when the array of {@link Point}s contains duplicates
+     *
+     * @param pointsArray the array containing the {@link Point}s
+     */
+    private static void checkDuplicates(Point[] pointsArray) {
+        for (int i = 1; i < pointsArray.length; i++) {
+            if (pointsArray[i - 1].compareTo(pointsArray[i]) == 0) {
                 throw new IllegalArgumentException("Duplicate points!");
             }
         }
@@ -279,18 +251,25 @@ public class FastCollinearPoints {
 
         // draw the points
         StdDraw.enableDoubleBuffering();
+
         StdDraw.setXscale(0, 32768);
         StdDraw.setYscale(0, 32768);
-        for (Point p : points) {
-            p.draw();
-        }
+
         StdDraw.show();
+        StdDraw.setPenColor(Color.BLACK);
+        StdDraw.filledRectangle(0, 0, 32768, 32768);
 
         // print and draw the line segments
         FastCollinearPoints collinear = new FastCollinearPoints(points);
+
+        StdDraw.setPenColor(30, 30, 150);
         for (LineSegment segment : collinear.segments()) {
-            StdOut.println(segment);
             segment.draw();
+            StdOut.println(segment);
+        }
+        StdDraw.setPenColor(Color.WHITE);
+        for (Point p : points) {
+            p.draw();
         }
         StdDraw.show();
     }

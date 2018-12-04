@@ -67,31 +67,17 @@ public class Point implements Comparable<Point> {
      * @return the slope between this point and the specified point
      */
     public double slopeTo(Point that) {
-        double result = 0;
-        Point p0 = this;
-        Point p1 = that;
-
-        double dy = p1.y - p0.y;
-        double dx = p1.x - p0.x;
-
-        // normal: dy/dx
-        if (dx != 0 && dy != 0) {
-            result = dy / dx;
+        if (this.x == that.x) {
+            if (this.y == that.y) {
+                return Double.NEGATIVE_INFINITY;
+            }
+            return Double.POSITIVE_INFINITY;
         }
-        // horizontal: 0
-        else if (dx != 0 && dy == 0) {
-            result = 0.0;
-        }
-        // vertical: positive infinity
-        else if (dx == 0 && dy != 0) {
-            result = Double.POSITIVE_INFINITY;
-        }
-        // degenerate: negative infinity
-        else if (dx == 0 && dy == 0) {
-            result = Double.NEGATIVE_INFINITY;
+        if (this.y == that.y) {
+            return 0;
         }
 
-        return result;
+        return (that.y - this.y) / (double) (that.x - this.x);
     }
 
     /**
@@ -107,12 +93,9 @@ public class Point implements Comparable<Point> {
      * if this point is greater than the argument point</ul>
      */
     public int compareTo(Point that) {
-        Point p0 = this;
-        Point p1 = that;
-
-        int result = p0.y - p1.y;
+        int result = this.y - that.y;
         if (result == 0) {
-            result = p0.x - p1.x;
+            result = this.x - that.x;
         }
         return result;
     }
@@ -124,14 +107,12 @@ public class Point implements Comparable<Point> {
      * @return the Comparator that defines this ordering on points
      */
     public Comparator<Point> slopeOrder() {
-        final Point parent = this;
         return new Comparator<Point>() {
             @Override
             public int compare(Point p0, Point p1) {
-                double slope0 = parent.slopeTo(p0);
-                double slope1 = parent.slopeTo(p1);
-                int compareResult = (int) Math.signum(slope0 - slope1);
-                return compareResult;
+                double slope0 = slopeTo(p0);
+                double slope1 = slopeTo(p1);
+                return (int) Math.signum(slope0 - slope1);
             }
         };
     }

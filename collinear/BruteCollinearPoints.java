@@ -34,19 +34,29 @@ public class BruteCollinearPoints {
 
         List<Point[]> listOfLineSegments = new ArrayList<>();
 
-        for (int p = 0; p < points.length; p++) {
+        for (int p0 = 0; p0 < points.length - 3; p0++) {
 
-            for (int q = 0; q < points.length; q++) {
-                if (q != p) {
+            for (int p1 = p0 + 1; p1 < points.length - 2; p1++) {
 
-                    double pq = points[p].slopeTo(points[q]);
+                double pq = points[p0].slopeTo(points[p1]);
 
-                    for (int r = 0; r < points.length; r++) {
-                        if (r != p && r != q) {
+                for (int p2 = p1 + 1; p2 < points.length - 1; p2++) {
 
-                            double qr = points[q].slopeTo(points[r]);
+                    double qr = points[p1].slopeTo(points[p2]);
 
-                            iterateOverPoints(listOfLineSegments, p, q, pq, r, qr);
+                    for (int p3 = p2 + 1; p3 < points.length; p3++) {
+
+                        double rs = points[p2].slopeTo(points[p3]);
+
+                        if (Double.compare(pq, qr) == 0 && Double.compare(qr, rs) == 0) {
+
+                            addLineSegment(listOfLineSegments, new Point[] {
+                                    points[p0],
+                                    points[p1],
+                                    points[p2],
+                                    points[p3]
+                            });
+
                         }
                     }
                 }
@@ -55,27 +65,6 @@ public class BruteCollinearPoints {
 
 
         return getLineSegmentsFromStartAndEndPoints(listOfLineSegments);
-    }
-
-    private void iterateOverPoints(List<Point[]> listOfLineSegments, int p, int q, double pq, int r,
-                                   double qr) {
-        for (int s = 0; s < points.length; s++) {
-
-            if (s != r && s != q && s != p) {
-
-                double rs = points[r].slopeTo(points[s]);
-
-                if (pq == qr && qr == rs) {
-
-                    addLineSegment(listOfLineSegments, new Point[] {
-                            points[p],
-                            points[q],
-                            points[r],
-                            points[s]
-                    });
-                }
-            }
-        }
     }
 
 
@@ -163,26 +152,19 @@ public class BruteCollinearPoints {
         return lineSegments.toArray(new LineSegment[0]);
     }
 
-    private boolean equalPoints(Point p0, Point p1) {
-
-        if (p0 == null && p1 == null) {
-            return true;
-        }
-        else if (p0 == null && p1 != null || p0 != null && p1 == null) {
-            return false;
-        }
-        else if (p0 != null && p1 != null) {
-            return p0.compareTo(p1) == 0;
-        }
-        return false;
-    }
-
-
+    /**
+     * Returns true if the two array contains identical elements
+     *
+     * @param arr1 the first array
+     * @param arr2 the second array
+     * @return true, if the two array are identical, false otherwise
+     */
     private boolean sameArray(Point[] arr1, Point[] arr2) {
 
         if (arr1.length == arr2.length) {
             for (int j = 0; j < arr1.length; j++) {
-                if (!equalPoints(arr1[j], arr2[j])) {
+                if ((arr1[j] != arr2[j])) {
+
                     return false;
                 }
             }
@@ -193,6 +175,14 @@ public class BruteCollinearPoints {
         return true;
     }
 
+    /**
+     * Adds the <code>pointsOfLineSegment</code> to <code>listofLineSegemnts</code> only, when the
+     * later does not contain the earlier
+     *
+     * @param listOfLineSegments  the list of already added line segments
+     * @param pointsOfLineSegment the new array of {@link Point}s to be added to the
+     *                            <code>listOfLineSegments</code>
+     */
     private void addLineSegment(List<Point[]> listOfLineSegments, Point[] pointsOfLineSegment) {
 
         Arrays.sort(pointsOfLineSegment);
@@ -206,10 +196,15 @@ public class BruteCollinearPoints {
         if (!found) {
             listOfLineSegments.add(pointsOfLineSegment);
         }
-
     }
 
-
+    /**
+     * Returns the {@link List} of {@link LineSegment} from the <code>listOfLineSegments</code>
+     *
+     * @param listofLineSegemnts the {@link List} of array of {@link Point}s containing the line
+     *                           segments defined by the points
+     * @return
+     */
     private List<LineSegment> getLineSegmentsFromStartAndEndPoints(
             List<Point[]> listofLineSegemnts) {
         List<LineSegment> result = new ArrayList<>();
@@ -218,9 +213,6 @@ public class BruteCollinearPoints {
             result.add(new LineSegment(segment[0], segment[segment.length - 1]));
         }
 
-
         return result;
     }
-
-
 }
