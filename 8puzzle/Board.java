@@ -68,7 +68,7 @@ public class Board {
     /**
      * number of blocks out of place
      *
-     * @return
+     * @return the hamming distance
      */
     public int hamming() {
 
@@ -92,6 +92,13 @@ public class Board {
         return this.hammingDistance;
     }
 
+    /**
+     * Returns the row and column position of a numbered block
+     *
+     * @param number           the number of the block
+     * @param dimensionOfBoard the dimension of the board (width/height)
+     * @return the original {@link Position} of the block with the given number
+     */
     private Position getPositionFromNumber(int number, int dimensionOfBoard) {
         if (number == 0) {
             return new Position(dimensionOfBoard - 1, dimensionOfBoard - 1);
@@ -102,7 +109,7 @@ public class Board {
     /**
      * sum of Manhattan distances between blocks and goal
      *
-     * @return
+     * @return sum of Manhattan distances between blocks and goal
      */
     public int manhattan() {
         if (manhattanDistance < 0) {
@@ -129,7 +136,7 @@ public class Board {
     /**
      * is this board the goal board?
      *
-     * @return
+     * @return true if the board is the goal board
      */
     public boolean isGoal() {
         int number = 1;
@@ -176,7 +183,7 @@ public class Board {
     }
 
     /**
-     * all neighboring boards
+     * Returns all neighboring boards
      *
      * @return the {@link List} of all valid neighboring boards
      */
@@ -205,6 +212,16 @@ public class Board {
             for (int x = 0; x < dimension; x++) {
                 if (!emptyCellPosition.equals(x, y)) {
                     positions.add(new Position(x, y));
+                    break;
+                }
+            }
+        }
+
+        for (int y = dimension - 1; y >= 0; y--) {
+            for (int x = dimension - 1; x >= 0; x--) {
+                if (!emptyCellPosition.equals(x, y)) {
+                    positions.add(new Position(x, y));
+                    break;
                 }
             }
         }
@@ -366,12 +383,14 @@ public class Board {
 
         /**
          * Returns true if the position is valid
+         *
          * @param positionX column
          * @param positionY row
          * @return true if the position is valid
          */
         public boolean isValid(int positionX, int positionY) {
-            boolean valid = positionX >= 0 && positionX < dimension && positionY >= 0 && positionY < dimension;
+            boolean valid = positionX >= 0 && positionX < dimension && positionY >= 0
+                    && positionY < dimension;
             return valid;
         }
     }
