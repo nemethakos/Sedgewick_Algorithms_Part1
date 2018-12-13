@@ -17,9 +17,21 @@ public class Board {
      * fits into a short
      */
     private final short[][] blocks;
-    private final short dimension;
-    private short emptyCellX;
-    private short emptyCellY;
+
+    /**
+     * dimension of board
+     */
+    private final byte dimension;
+
+    /**
+     * Empty cell's x coordinate (the 0 valued block)
+     */
+    private byte emptyCellX;
+
+    /**
+     * Empty cell's y coordinate (the 0 valued block)
+     */
+    private byte emptyCellY;
 
     /**
      * Copy constructor
@@ -31,9 +43,7 @@ public class Board {
     }
 
     /**
-     * construct a board from an n-by-n array of blocks
-     * <p>
-     * (where blocks[i][j] = block in y i, xumn * j)
+     * Construct a board from an n-by-n array of blocks
      *
      * @param blocks the matrix to use to make a new board
      */
@@ -42,7 +52,7 @@ public class Board {
         this.blocks = copyResult.blocks;
         this.emptyCellX = copyResult.emptyCellPosition.x;
         this.emptyCellY = copyResult.emptyCellPosition.y;
-        this.dimension = (short) this.blocks.length;
+        this.dimension = (byte) this.blocks.length;
     }
 
     /**
@@ -55,7 +65,7 @@ public class Board {
     private Board(short[][] blocks) {
         CopyResult copyResult = copyOf(blocks);
         this.blocks = copyResult.blocks;
-        this.dimension = (short) this.blocks.length;
+        this.dimension = (byte) this.blocks.length;
         this.emptyCellX = copyResult.emptyCellPosition.x;
         this.emptyCellY = copyResult.emptyCellPosition.y;
     }
@@ -93,9 +103,9 @@ public class Board {
 
         int hamming = 0;
         int required = 1;
-        for (int y = 0; y < dimension; y++) {
-            for (int x = 0; x < dimension; x++) {
-                int number = blocks[y][x];
+        for (byte y = 0; y < dimension; y++) {
+            for (byte x = 0; x < dimension; x++) {
+                short number = blocks[y][x];
                 if (number != 0 && number != required) {
                     hamming++;
                 }
@@ -119,9 +129,9 @@ public class Board {
 
         int manhattan = 0;
         short requiredNumber = 1;
-        for (int y = 0; y < dimension; y++) {
-            for (int x = 0; x < dimension; x++) {
-                int number = blocks[y][x];
+        for (byte y = 0; y < dimension; y++) {
+            for (byte x = 0; x < dimension; x++) {
+                short number = blocks[y][x];
                 if (number != requiredNumber && number != 0) {
                     int dx = Math.abs(x - ((number - 1) % dimension));
                     int dy = Math.abs(y - ((number - 1) / dimension));
@@ -164,7 +174,7 @@ public class Board {
             return false;
         }
 
-        for (int y = 0; y < dimension; y++) {
+        for (byte y = 0; y < dimension; y++) {
             if (!Arrays.equals(this.blocks[y], other.blocks[y])) {
                 return false;
             }
@@ -182,9 +192,9 @@ public class Board {
         List<Board> boards = new ArrayList<>();
         Position emptyCellPosition = new Position(emptyCellX, emptyCellY);
         List<Direction> emptyCellNeighbours = emptyCellPosition.getNeighbourDirections();
-        for (Direction d : emptyCellNeighbours) {
+        for (Direction direction : emptyCellNeighbours) {
             Board neighbour = new Board(this);
-            neighbour.moveEmptyCell(d);
+            neighbour.moveEmptyCell(direction);
             boards.add(neighbour);
         }
 
@@ -200,8 +210,8 @@ public class Board {
         List<Position> positions = new ArrayList<>();
 
         Position emptyCellPosition = new Position(emptyCellX, emptyCellY);
-        for (int y = 0; y < dimension; y++) {
-            for (int x = 0; x < dimension; x++) {
+        for (byte y = 0; y < dimension; y++) {
+            for (byte x = 0; x < dimension; x++) {
                 if (!emptyCellPosition.equals(x, y)) {
                     positions.add(new Position(x, y));
                     if (positions.size() == 2) {
@@ -210,7 +220,6 @@ public class Board {
                 }
             }
         }
-
 
         Board twin = new Board(this);
         twin.swap(positions.get(0), positions.get(1));
@@ -225,16 +234,16 @@ public class Board {
     private void moveEmptyCell(Direction direction) {
         switch (direction) {
             case NORTH:
-                swapEmptyCell(emptyCellX, (short) (emptyCellY - 1));
+                swapEmptyCell(emptyCellX, (byte) (emptyCellY - 1));
                 break;
             case SOUTH:
-                swapEmptyCell(emptyCellX, (short) (emptyCellY + 1));
+                swapEmptyCell(emptyCellX, (byte) (emptyCellY + 1));
                 break;
             case EAST:
-                swapEmptyCell((short) (emptyCellX + 1), emptyCellY);
+                swapEmptyCell((byte) (emptyCellX + 1), emptyCellY);
                 break;
             case WEST:
-                swapEmptyCell((short) (emptyCellX - 1), emptyCellY);
+                swapEmptyCell((byte) (emptyCellX - 1), emptyCellY);
                 break;
         }
     }
@@ -257,7 +266,7 @@ public class Board {
      * @param newX new x
      * @param newY new y
      */
-    private void swapEmptyCell(short newX, short newY) {
+    private void swapEmptyCell(byte newX, byte newY) {
         swap(emptyCellX, emptyCellY, newX, newY);
         emptyCellX = newX;
         emptyCellY = newY;
@@ -271,7 +280,7 @@ public class Board {
      * @param x2 x coordinate of the second block
      * @param y2 y coordinate of the second block
      */
-    private void swap(int x1, int y1, int x2, int y2) {
+    private void swap(byte x1, byte y1, byte x2, byte y2) {
         short tmp = blocks[y1][x1];
         blocks[y1][x1] = blocks[y2][x2];
         blocks[y2][x2] = tmp;
@@ -286,8 +295,8 @@ public class Board {
         StringBuilder sb = new StringBuilder();
 
         sb.append(dimension + "\r\n");
-        for (int y = 0; y < dimension; y++) {
-            for (int x = 0; x < dimension; x++) {
+        for (byte y = 0; y < dimension; y++) {
+            for (byte x = 0; x < dimension; x++) {
                 sb.append(String.format("%1$6s", blocks[y][x]));
             }
             sb.append("\r\n");
@@ -315,8 +324,8 @@ public class Board {
      * Position of a block
      */
     private class Position {
-        private final short x;
-        private final short y;
+        private final byte x;
+        private final byte y;
 
         public Position() {
             x = 0;
@@ -324,8 +333,8 @@ public class Board {
         }
 
         public Position(int x, int y) {
-            this.x = (short) x;
-            this.y = (short) y;
+            this.x = (byte) x;
+            this.y = (byte) y;
         }
 
         @Override
@@ -381,7 +390,6 @@ public class Board {
         }
     }
 
-
     /**
      * Value objects for storing the result of a blocks copy operation
      */
@@ -392,8 +400,8 @@ public class Board {
         public CopyResult(int[][] blocksToCopy) {
             Position position = null;
             this.blocks = new short[blocksToCopy.length][blocksToCopy.length];
-            for (int y = 0; y < blocksToCopy.length; y++) {
-                for (int x = 0; x < blocksToCopy.length; x++) {
+            for (byte y = 0; y < blocksToCopy.length; y++) {
+                for (byte x = 0; x < blocksToCopy.length; x++) {
                     this.blocks[y][x] = (short) blocksToCopy[y][x];
                     if (blocksToCopy[y][x] == 0) {
                         position = new Position(x, y);
@@ -407,8 +415,8 @@ public class Board {
         public CopyResult(short[][] blocksToCopy) {
             Position position = null;
             this.blocks = new short[blocksToCopy.length][blocksToCopy.length];
-            for (int y = 0; y < blocksToCopy.length; y++) {
-                for (int x = 0; x < blocksToCopy.length; x++) {
+            for (byte y = 0; y < blocksToCopy.length; y++) {
+                for (byte x = 0; x < blocksToCopy.length; x++) {
                     this.blocks[y][x] = blocksToCopy[y][x];
                     if (blocksToCopy[y][x] == 0) {
                         position = new Position(x, y);
