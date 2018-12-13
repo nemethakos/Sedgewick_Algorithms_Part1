@@ -2,8 +2,8 @@ import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.StdOut;
 
-import java.util.LinkedList;
 import java.util.Deque;
+import java.util.LinkedList;
 
 public class Solver {
 
@@ -34,19 +34,17 @@ public class Solver {
      */
     private SearchNode solve(Board initial) {
 
-
         MinPQ<SearchNode> normalPQ = new MinPQ<>();
         MinPQ<SearchNode> alternativePQ = new MinPQ<>();
 
-        SearchNode nullSearchNode = new SearchNode(-1, initial, null);
+        normalPQ.insert(new SearchNode(0, initial, null));
+        alternativePQ.insert(new SearchNode(0, initial.twin(), null));
 
-        normalPQ.insert(new SearchNode(0, initial, nullSearchNode));
-        alternativePQ.insert(new SearchNode(0, initial.twin(), nullSearchNode));
-
-        SearchNode normalNode = null;
-        SearchNode alternativeNode = null;
+        SearchNode normalNode;
+        SearchNode alternativeNode;
 
         do {
+
             normalNode = normalPQ.delMin();
 
             // solve one iteration of normal board
@@ -59,7 +57,8 @@ public class Solver {
                  * when considering the neighbors of a search node, don't enqueue a neighbor
                  * if its board is the same as the board of the predecessor search node.
                  */
-                if (!normalNeighbour.equals(normalNode.predecessor.board)) {
+                if (normalNode.predecessor == null || !normalNeighbour
+                        .equals(normalNode.predecessor.board)) {
                     SearchNode normalSearchNode = new SearchNode(normalNode.steps + 1,
                                                                  normalNeighbour,
                                                                  normalNode);
@@ -70,16 +69,17 @@ public class Solver {
             alternativeNode = alternativePQ.delMin();
 
             // solve one iteration of twin board
-            Iterable<Board> alternativeneighbours = alternativeNode.board.neighbors();
-            for (Board alternativeNeighbour : alternativeneighbours) {
-                if (!alternativeNeighbour.equals(alternativeNode.predecessor.board)) {
+            Iterable<Board> alternativeNeighbours = alternativeNode.board.neighbors();
+            for (Board alternativeNeighbour : alternativeNeighbours) {
+                if (alternativeNode.predecessor == null || !alternativeNeighbour
+                        .equals(alternativeNode.predecessor.board)) {
                     SearchNode alternativeSearchNode = new SearchNode(alternativeNode.steps + 1,
                                                                       alternativeNeighbour,
                                                                       alternativeNode);
                     alternativePQ.insert(alternativeSearchNode);
                 }
             }
-        } while (!(normalNode.board.manhattan() == 0 || alternativeNode.board.manhattan() == 0));
+        } while (!(normalNode.board.isGoal() || alternativeNode.board.isGoal()));
 
         // if the alternative board is solved, this means that the normal board is unsolvable
         if (alternativeNode.board.isGoal()) {
@@ -142,6 +142,11 @@ public class Solver {
         private final int steps;
 
         /**
+         * lazy calculated manhattan distance
+         */
+        private int manhattanDistance = -1;
+
+        /**
          * The board
          */
         private final Board board;
@@ -151,29 +156,30 @@ public class Solver {
          */
         private final SearchNode predecessor;
 
+        /**
+         * Constructor
+         *
+         * @param steps       number of steps for this board
+         * @param board       the {@link Board}
+         * @param predecessor the previous {@link SearchNode}
+         */
         public SearchNode(int steps, Board board, SearchNode predecessor) {
             this.steps = steps;
             this.board = board;
             this.predecessor = predecessor;
         }
 
-        @Override
-        public String toString() {
-            return "SearchNode{" +
-                    "\r\npriority=" + getPriority() +
-                    "\r\nsteps=" + steps +
-                    "\r\nboard=" + board +
-                    "\r\npredecessor=" + predecessor +
-                    "-------------------------------------------";
-        }
-
         /**
-         * Returns the priority: steps + manhattan distance
+         * Returns the priority: steps + manhattan distance. Queries only the {@link
+         * Board#manhattan()} when needed.
          *
          * @return the priority: steps + manhattan distance
          */
         public int getPriority() {
-            return board.manhattan() + steps;
+            if (manhattanDistance < 0) {
+                manhattanDistance = board.manhattan();
+            }
+            return manhattanDistance + steps;
         }
 
         /**
