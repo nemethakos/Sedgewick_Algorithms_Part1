@@ -55,7 +55,7 @@ public class Board {
     private Board(short[][] blocks) {
         CopyResult copyResult = copyOf(blocks);
         this.blocks = copyResult.blocks;
-        this.dimension = (byte) this.blocks.length;
+        this.dimension = (short) this.blocks.length;
         this.emptyCellX = copyResult.emptyCellPosition.x;
         this.emptyCellY = copyResult.emptyCellPosition.y;
     }
