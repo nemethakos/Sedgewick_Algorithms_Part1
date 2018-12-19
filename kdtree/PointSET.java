@@ -1,9 +1,6 @@
 import edu.princeton.cs.algs4.Point2D;
 import edu.princeton.cs.algs4.RectHV;
-import edu.princeton.cs.algs4.StdDraw;
-import edu.princeton.cs.algs4.StdRandom;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +24,7 @@ import java.util.TreeSet;
  */
 public class PointSET {
 
-    private TreeSet<Point2D> redBlackBST = new TreeSet<>();
+    private final TreeSet<Point2D> redBlackBST = new TreeSet<>();
 
     /**
      * construct an empty set of points
@@ -35,81 +32,9 @@ public class PointSET {
     public PointSET() {
     }
 
-    private static void time(Runnable r) {
-        long start = System.nanoTime();
-        r.run();
-        long end = System.nanoTime();
-        System.out.println("" + (end - start) + "ns");
-    }
-
     // unit testing of the methods (optional)
     public static void main(String[] args) {
-/*
-        int max = 100;
-
-        StdDraw.setScale(0, max);
-        StdDraw.setPenColor(Color.BLACK);
-
-        PointSET ps = new PointSET();
-        for (int y = 0; y < max; y += max / 10) {
-            for (int x = 0; x < max; x += max / 10) {
-                Point2D p = new Point2D(StdRandom.uniform(0,max), StdRandom.uniform(0,max));
-                p.draw();
-                ps.insert(p);
-            }
-        }
-
-
-        RectHV rect = new RectHV(max * 0.25, max * 0.25, 0.75 * max, 0.75 * max);
-        StdDraw.setPenColor(Color.ORANGE);
-        rect.draw();
-
-        StdDraw.setPenColor(Color.RED);
-        Iterable<Point2D> range = ps.range(rect);
-        for (Point2D p : range) {
-            StdDraw.circle(p.x(), p.y(), max / 50);
-            p.draw();
-        }
-*/
-
-
-        int max = 100;
-        PointSET ps = new PointSET();
-        for (int i = 0; i < max; i++) {
-            int rndX = StdRandom.uniform(0, max);
-            int rndY = StdRandom.uniform(0, max);
-            Point2D p = new Point2D(rndX, rndY);
-            // StdDraw.circle(rndX, rndY, max / 100);
-            // p.draw();
-            ps.insert(p);
-        }
-        StdDraw.setScale(0, max);
-        StdDraw.enableDoubleBuffering();
-
-        while (true) {
-            StdDraw.setPenColor(Color.WHITE);
-            StdDraw.filledRectangle(0, 0, max, max);
-
-
-            StdDraw.setPenColor(Color.BLACK);
-
-
-            for (Point2D point : ps.points()) {
-                // System.out.println(point);
-                StdDraw.circle(point.x(), point.y(), 2);
-            }
-            StdDraw.setPenColor(Color.RED);
-            Point2D latticePoint = new Point2D(StdDraw.mouseX(), StdDraw.mouseY());
-
-
-            Point2D nearest = ps.nearest(latticePoint);
-            // System.out.println(nearest);
-            StdDraw.line(latticePoint.x(), latticePoint.y(), nearest.x(), nearest.y());
-
-            StdDraw.circle(latticePoint.x(), latticePoint.y(), 1);
-            StdDraw.show();
-        }
-
+        //
     }
 
     // add the point to the set (if it is not already in the set)
@@ -130,7 +55,16 @@ public class PointSET {
         return result;
     }
 
-    // a nearest neighbor in the set to point p; null if the set is empty
+    /**
+     * A nearest neighbor in the set to point p; null if the set is empty
+     * <p>
+     * Note: this is a suboptimal solution, since the linear search results in O(n) complexity, but
+     * using a red black tree results in O(n lg n) which is slightly worst.
+     *
+     * @param p the query point
+     * @return the nearest point to the query point
+     */
+    //
     public Point2D nearest(Point2D p) {
         checkForNull(p);
 
@@ -179,7 +113,16 @@ public class PointSET {
         }
     }
 
-    // all points that are inside the rectangle (or on the boundary)
+    /**
+     * Returns all points that are inside the rectangle (or on the boundary)
+     * <p>
+     * Note: using a binary search tree's range operation removes the needs to compare points above
+     * and below the search rectangle. Still need to compare points by the x coordinate below the
+     * top and above the bottom of the search rectangle.
+     *
+     * @param rect the search rectangle
+     * @return all points inside or on the edge of the rectangle
+     */
     public Iterable<Point2D> range(RectHV rect) {
 
         checkForNull(rect);

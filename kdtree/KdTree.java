@@ -15,84 +15,90 @@ import java.util.List;
 
 public class KdTree {
 
+    /**
+     * Dot radius for visualizing the tree
+     */
+    private static final double DOT_RADIUS = 0.002;
+
+    /**
+     * Line width for visualizing the tree
+     */
+    private static final double LINE_WIDTH = 0.001;
+
+    /**
+     * Root of the {@link KdTree}
+     */
     private Node root;
+
+    /**
+     * Number of {@link Node}s in the {@link KdTree}
+     */
     private int size;
 
     public static void main(String[] args) {
-
-        KdTree tree = new KdTree();
-
-        tree.insert(new Point2D(0.9, 0.6));
-        tree.insert(new Point2D(0.7, 0.2));
-        tree.insert(new Point2D(0.5, 0.4));
-        tree.insert(new Point2D(0.2, 0.3));
-        tree.insert(new Point2D(0.4, 0.7));
-        tree.insert(new Point2D(0.9, 0.6));
-        tree.draw();
-        System.out.println(tree.size());
-        System.out.println(tree.contains(new Point2D(0, 0)));
-        System.out.println(tree.contains(new Point2D(0.9, 0.6)));
-
+        //
     }
 
+    /**
+     * Returns true if the {@link KdTree} contains the <code>point</code>
+     *
+     * @param point the point to find
+     * @return true if the {@link KdTree} contains the <code>point</code>
+     */
     public boolean contains(Point2D point) {
         if (point == null) {
             throw new IllegalArgumentException("argument should be non null");
         }
         Node node = root;
         while (node != null) {
-            if (node.xAxis) {
-                // compare by X axis
-                int compareResult = compareX(point, node.point);
-                if (compareResult > 0) {
-                    node = node.right;
-                }
-                else if (compareResult <= 0) {
-                    if (point.equals(node.point)) {
-                        return true;
-                    }
-                    node = node.left;
-                }
+            int compareResult = compare(point, node.point, node.xAxis);
+            if (compareResult > 0) {
+                node = node.right;
             }
             else {
-                // compare by Y axis
-                int compareResult = compareY(point, node.point);
-                if (compareResult > 0) {
-                    node = node.right;
+                if (point.equals(node.point)) {
+                    return true;
                 }
-                else if (compareResult <= 0) {
-                    if (point.equals(node.point)) {
-                        return true;
-                    }
-                    node = node.left;
-                }
+                node = node.left;
             }
-        } // end of while
+        }
         return false;
     }
 
+    /**
+     * Compares two {@link Point2D}s by X or by Y coordinates
+     *
+     * @param point1     the first {@link Point2D}
+     * @param point2     the second {@link Point2D}
+     * @param compareByX if true, compare by X coordinate, if false compare by Y coordinate
+     * @return -1 if the first is less, 0 if equal, 1 if greater than the second point
+     */
+    private int compare(Point2D point1, Point2D point2, boolean compareByX) {
+        if (compareByX) {
+            return Double.compare(point1.x(), point2.x());
+        }
+        else {
+            return Double.compare(point1.y(), point2.y());
+        }
+
+    }
+
+    /**
+     * Returns true if the {@link KdTree} is empty
+     *
+     * @return true if the {@link KdTree} is empty
+     */
     public boolean isEmpty() {
         return root == null;
     }
 
+    /**
+     * Returns the number of {@link Point2D}s in the {@link KdTree}
+     *
+     * @return the number of {@link Point2D}s in the {@link KdTree}
+     */
     public int size() {
         return size;
-    }
-
-    /**
-     * Returns +1 if point1.x > point2.x Returns 0 if point1.x == point2.x Returns -1 if point1.x <
-     * point2.x
-     *
-     * @param point1
-     * @param point2
-     * @return
-     */
-    private int compareX(Point2D point1, Point2D point2) {
-        return Double.compare(point1.x(), point2.x());
-    }
-
-    private int compareY(Point2D point1, Point2D point2) {
-        return Double.compare(point1.y(), point2.y());
     }
 
     /**
@@ -102,14 +108,13 @@ public class KdTree {
      * y-coordinate (if the point to be inserted has a smaller y-coordinate than the point in the
      * node, go left; otherwise go right); then at the next level the x-coordinate, and so forth.
      *
-     * @param point
+     * @param point the point to insert
      */
     public void insert(Point2D point) {
 
         if (point == null) {
             throw new IllegalArgumentException("argument should be non null");
         }
-
 
         if (root == null) {
             // no nodes in tree yet
@@ -118,62 +123,34 @@ public class KdTree {
         else {
             // there are nodes in tree
             Node node = root;
-            Node found = null;
             Node parent = null;
             boolean left = false;
             while (node != null) {
-                if (node.xAxis) {
-                    // compare by X axis
-                    int compareResult = compareX(point, node.point);
-                    if (compareResult > 0) {
-                        parent = node;
-                        node = node.right;
-                        left = false;
-                    }
-                    else if (compareResult < 0) {
-                        parent = node;
-                        node = node.left;
-                        left = true;
-                    }
-                    else {
-                        if (point.equals(node.point)) {
-                            return;
-                        }
-                        else {
-                            parent = node;
-                            node = node.left;
-                            left = true;
-                        }
-                    }
-
+                int compareResult = compare(point, node.point, node.xAxis);
+                if (compareResult > 0) {
+                    parent = node;
+                    node = node.right;
+                    left = false;
+                }
+                else if (compareResult < 0) {
+                    parent = node;
+                    node = node.left;
+                    left = true;
                 }
                 else {
-                    // compare by Y axis
-                    int compareResult = compareY(point, node.point);
-                    if (compareResult > 0) {
-                        parent = node;
-                        node = node.right;
-                        left = false;
+                    if (point.equals(node.point)) {
+                        // the point to insert is already in the tree, do not add
+                        return;
                     }
-                    else if (compareResult < 0) {
+                    else {
                         parent = node;
                         node = node.left;
                         left = true;
                     }
-                    else {
-                        if (point.equals(node.point)) {
-                            return;
-                        }
-                        else {
-                            parent = node;
-                            node = node.left;
-                            left = true;
-                        }
-                    }
-
                 }
+
             } // end of while
-            // not found
+
             RectHV bounds = null;
             if (parent.xAxis) {
                 // parent is x axis, node is y axis
@@ -213,10 +190,6 @@ public class KdTree {
     }
 
     /**
-     * Grader output: do not compute the distance between the query point and the point in a node if
-     * the closest point discovered so far is closer than the distance between the query point and
-     * the rectangle corresponding to the node
-     * <p>
      * Nearest-neighbor search. To find a closest point to a given query point, start at the root
      * and recursively search in both subtrees using the following pruning rule: if the closest
      * point discovered so far is closer than the distance between the query point and the rectangle
@@ -228,8 +201,9 @@ public class KdTree {
      * point as the first subtree to explore—the closest point found while exploring the first
      * subtree may enable pruning of the second subtree.
      *
-     * @param query
-     * @return
+     * @param query the query point
+     * @return the nearest point to the query point or null if not found (only if the {@link KdTree}
+     * is empty
      */
     public Point2D nearest(Point2D query) {
         if (query == null) {
@@ -238,52 +212,66 @@ public class KdTree {
         if (root == null) {
             return null;
         }
-        return nearest(query, root, root, root.point.distanceSquaredTo(query)).nearest.point;
+
+        return nearest(query, root, null, Double.POSITIVE_INFINITY).nearest.point;
     }
 
+
+    /**
+     * Find the nearest point at <code>node</code>
+     *
+     * @param query                  the query {@link Point2D}
+     * @param node                   the current {@link Node}
+     * @param nearest                the current nearest {@link Node}
+     * @param nearestDistanceSquared the current nearest distance squared
+     * @return the {@link SearchResult} containing the nearest {@link Point2D} and the nearest
+     * distance squared
+     */
     private SearchResult nearest(Point2D query, Node node, Node nearest,
                                  double nearestDistanceSquared) {
-        if (node == null) {
-            return null;
-        }
 
+        // calculate the distance from the query point to the current node
         double distance = node.point.distanceSquaredTo(query);
+        // update the nearest point and distance if the current one is closer
         if (nearestDistanceSquared > distance) {
             nearestDistanceSquared = distance;
             nearest = node;
         }
 
-        double leftDistance = Double.POSITIVE_INFINITY;
-        if (node.left != null) {
-            leftDistance = node.left.bounds.distanceSquaredTo(query);
-        }
-        double rightDistance = Double.POSITIVE_INFINITY;
-        if (node.right != null) {
-            rightDistance = node.right.bounds.distanceSquaredTo(query);
-        }
-
         ArrayList<Node> searchNodes = new ArrayList<>();
 
-
-        if (nearestDistanceSquared > leftDistance) {
-            // explore left
+        if (node.left != null) {
             searchNodes.add(node.left);
         }
 
-        if (nearestDistanceSquared > rightDistance) {
-            // explore right
+        if (node.right != null) {
             searchNodes.add(node.right);
         }
 
-        if (node.right != null && node.right.bounds.contains(query) && searchNodes.size() > 1) {
+        // "go down on the subtree which is on the same side as the query point"
+        // the default search order is the left and the right subtree. When the right
+        // subtree is on the same side of the node than the query point, switch
+        // the search order to the right and left subtree.
+        if (searchNodes.size() > 1 &&
+                (node.xAxis && query.x() > node.point.x() ||
+                        !node.xAxis && query.y() > node.point.y())) {
+
             Collections.swap(searchNodes, 0, 1);
         }
 
         for (Node searchNode : searchNodes) {
-            SearchResult searchResult = nearest(query, searchNode, nearest, nearestDistanceSquared);
-            if (searchResult.nearestDistanceSquared < nearestDistanceSquared) {
-                nearest = searchResult.nearest;
-                nearestDistanceSquared = searchResult.nearestDistanceSquared;
+
+            // only check the subtree if the bounding rectangle is closer than the current nearest distance
+            if (searchNode.bounds.distanceSquaredTo(query) < nearestDistanceSquared) {
+                // get the distance to the searchNode
+                SearchResult searchResult = nearest(query, searchNode, nearest,
+                                                    nearestDistanceSquared);
+                // if the new distance is closer than the previous one, update the nearest distance and
+                // node
+                if (searchResult.nearestDistanceSquared < nearestDistanceSquared) {
+                    nearest = searchResult.nearest;
+                    nearestDistanceSquared = searchResult.nearestDistanceSquared;
+                }
             }
         }
 
@@ -309,10 +297,19 @@ public class KdTree {
         return found;
     }
 
+    /**
+     * Recursive range search
+     *
+     * @param rect  the search {@link RectHV}
+     * @param node  the current {@link Node}
+     * @param found list of found {@link Node}s
+     */
     private void range(RectHV rect, Node node, List<Point2D> found) {
         if (node == null) {
             return;
         }
+        // if the current node's bounds does not intersects with the search rectangle,
+        // abandon searching the subtree
         if (!node.bounds.intersects(rect)) {
             return;
         }
@@ -331,10 +328,15 @@ public class KdTree {
      * need not be efficient—it is primarily for debugging.
      */
     public void draw() {
-        StdDraw.setPenRadius(0.001);
+        StdDraw.setPenRadius(LINE_WIDTH);
         draw(root);
     }
 
+    /**
+     * Recursively draws the subtree
+     *
+     * @param node the node to draw
+     */
     private void draw(Node node) {
         if (node == null) {
             return;
@@ -351,17 +353,20 @@ public class KdTree {
             StdDraw.line(node.bounds.xmin(), node.point.y(), node.bounds.xmax(), node.point.y());
         }
         StdDraw.setPenColor(Color.BLACK);
-        StdDraw.filledCircle(node.point.x(), node.point.y(), 0.002);
-        // draw right tree
+        StdDraw.filledCircle(node.point.x(), node.point.y(), DOT_RADIUS);
+
         draw(node.right);
     }
 
+    /**
+     * Node for the {@link KdTree}
+     */
     private static class Node {
-        private Point2D point;
-        private boolean xAxis;
+        private final Point2D point;
+        private final boolean xAxis;
+        private final RectHV bounds;
         private Node left;
         private Node right;
-        private RectHV bounds;
 
         public Node(Point2D point, boolean xAxis, RectHV bounds) {
             this.point = point;
@@ -370,6 +375,9 @@ public class KdTree {
         }
     }
 
+    /**
+     * Contains the result of the nearest operation
+     */
     private static class SearchResult {
         Node nearest;
         double nearestDistanceSquared;
